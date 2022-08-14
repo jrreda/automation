@@ -11,7 +11,7 @@ def send_email(message):
     sender_email = "mahmoudreda457@gmail.com"
     receiver_email = ["mahmoudreda457@gmail.com","belal1997medhat@gmail.com"]
     # https://stackoverflow.com/questions/46445269/gmail-blocks-login-attempt-from-python-with-app-specific-password
-    password = "**************" # "your email id's password"
+    password = "*****************" # "your email id's password"
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
@@ -37,7 +37,12 @@ def check_appointment():
 
     ## Page 1
     # Representation
-    driver.find_element(by=By.XPATH, value='//*[@id="Office"]/option[37]').click()
+    try:
+        offices = driver.find_element(by=By.XPATH, value='//*[@id="Office"]').text.split('\n')
+        office = f'//*[@id="Office"]/option[{offices.index("KAIRO") + 1}]'
+    except Exception as e:
+        raise Exception("Sorry, 'KAIRO' not in offices!")
+    driver.find_element(by=By.XPATH, value=office).click()
     # next
     driver.find_element(by=By.XPATH, value='//*[@id="main"]/form/table[2]/tbody/tr[2]/td[2]/input').click()
     # wait 5
@@ -45,7 +50,13 @@ def check_appointment():
 
     ## Page 2
     # Reservation for
-    driver.find_element(by=By.XPATH, value='//*[@id="CalendarId"]/option[4]').click()
+    try:
+        options = driver.find_element(by=By.XPATH, value='//*[@id="CalendarId"]').text.split('\n')
+        i = options.index('Aufenthaltstitel Studierender (residency permit student)') + 1
+        option = f'//*[@id="CalendarId"]/option[{i}]'
+    except Exception as e:
+        raise Exception("Sorry, 'Aufenthaltstitel Studierender (residency permit student)' not in offices!")
+    driver.find_element(by=By.XPATH, value=option).click()
     # next
     driver.find_element(by=By.XPATH, value='//*[@id="main"]/form/table[2]/tbody/tr[3]/td[2]/input[2]').click()
     # wait 5
@@ -76,15 +87,18 @@ def check_appointment():
     month = DT.datetime.strptime(from_week, "%m/%d/%Y").month
 
     # the CONDITION
-    if month <= 8:
-        print(f"The appoinment is in August in {date}")
+    if month <= 9:
+        print(f"The appoinment is before October in {date}")
 
         message = "Subject: Austrian Cairo embassy appointment [Automated]!\n\n"
-        message += (f"Appointments available for \"Aufenthaltstitel Studierender (residency permit student)\", 2 Person(s): {date}.")
+        message += f"Appointments available for \"Aufenthaltstitel Studierender (residency permit student)\", 2 Person(s): {date}.\n\n"
+        message += "HURRY UP: https://appointment.bmeia.gv.at/ \n\n\n"
+        message += f"Checked the appointments at {time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime())}."
         # send the message
         send_email(message)
     else:
-        print(f"There is no appoinments in August!\nThe nearest on in {date}")
+        print(f"There is no appoinments before October!\nThe nearest on in {date}")
+        print(f"Checked the appointments at {time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime())}.")
 
     driver.close()
 
@@ -92,6 +106,9 @@ def check_appointment():
 # Run job every 20 minute
 schedule.every(20).minutes.do(check_appointment)
 
-while True:
-    schedule.run_pending()
-    time.sleep(2)
+# Call to main function to run the program
+if __name__ == "__main__":
+    print("Working on it ......")
+    while True:
+        schedule.run_pending()
+        time.sleep(2)
